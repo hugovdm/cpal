@@ -14,11 +14,14 @@ use cpal::{FromSample, Sample};
 
 fn main() -> anyhow::Result<()> {
     let stream = stream_setup_for()?;
+    eprint!("np.array([");
     stream.play()?;
     std::thread::sleep(std::time::Duration::from_millis(4000));
+    eprintln!("])");
     Ok(())
 }
 
+#[derive(Debug)]
 pub enum Waveform {
     Sine,
     Square,
@@ -32,6 +35,8 @@ pub struct Oscillator {
     pub current_sample_index: f32,
     pub frequency_hz: f32,
 }
+
+const WINDOW: f32 = 420.0;
 
 impl Oscillator {
     fn advance_sample(&mut self) {
@@ -83,12 +88,24 @@ impl Oscillator {
     }
 
     fn tick(&mut self) -> f32 {
-        match self.waveform {
+        // if self.current_sample_index == 0.0 {
+        //     eprintln!("\nsample 0, waveform: {:?}", self.waveform);
+        // }
+        let sample = match self.waveform {
             Waveform::Sine => self.sine_wave(),
             Waveform::Square => self.square_wave(),
             Waveform::Saw => self.saw_wave(),
             Waveform::Triangle => self.triangle_wave(),
+        };
+        if self.current_sample_index < WINDOW
+            || self.current_sample_index > (self.sample_rate - WINDOW)
+        {
+            eprint!(" {},", sample);
         }
+        //  if self.current_sample_index == WINDOW {
+        //	    eprintln!("\nsample {}: {}, waveform: {:?}", WINDOW, sample, self.waveform);
+        //	}
+        sample
     }
 }
 
